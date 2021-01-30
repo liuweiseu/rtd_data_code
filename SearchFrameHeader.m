@@ -4,7 +4,7 @@ global_para;
 lost = -1;
 Last_time_info = data(2)*2^32 + data(3)*2^16 + data(4);
 time_info = data(Frame_len+2)*2^32 + data(Frame_len+3)*2^16 + data(Frame_len+4);
-if((data(Frame_len+1) > 60000) || (time_info == Last_time_info + Delta_time))
+if((data(Frame_len+1) > Threshold) || (time_info == Last_time_info + Delta_time))
     lost = CheckTimeinfo(time_info);
     if( data(Frame_len+1)~= 65535)
         Header_err = Header_err + 1;
@@ -28,7 +28,7 @@ end
 pos = 0;
 % 1. the frame header and time info may be in the data frame.
 for i=4:Frame_len
-    if(data(i)>60000)
+    if(data(i)>Threshold)
         time_info = data(i+1)*2^32 + data(i+2)*2^16 + data(i+3);
     else
         continue;
@@ -49,12 +49,12 @@ if(pos ~= 0)
 else
     while(lost == -1)
         tmp = fread(fp,1,'uint16');
-        if(tmp > 60000)
+        if(tmp > Threshold)
             t = fread(fp,3,'uint16');
             time_info = t(1)*2^32 + t(2)*2^16 + t(3);
             lost = CheckTimeinfo(time_info);
         end
-        if((lost == -1)&&(tmp>60000))
+        if((lost == -1)&&(tmp>Threshold))
             fseek(fp,-6,0);
         end
     end

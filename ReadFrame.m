@@ -33,6 +33,11 @@ if(Lost_frame > 0)
    Last_time_info = t + Delta_time;
    Lost_frame = Lost_frame - 1;
    return;
+elseif(Lost_frame < 0)
+    disp('Time Info Error!');
+    t = data(2)*2^32 + data(3)*2^16 + data(4);
+    d = data(5:Frame_len,1);
+    return;
 else
     t = data(2)*2^32 + data(3)*2^16 + data(4);
     d = data(5:Frame_len,1);

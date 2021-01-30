@@ -4,6 +4,14 @@ close all;
 
 global_para;
 
+%---------------------Init global parameters--------------------------
+Lost_frame = 0;
+% frame: frame header(0xffff) + time_info(48bit) + data(2048 * 16 bits)
+Frame_len = 1 + 3 + 2048;
+Header_err = 0;
+L_index = 1;
+Lost_frame_total = 0;
+Threshold = 60000;
 %------------------------- open data file ----------------------------
 [filename0, pathname] = uigetfile( ...
     {'*.dat','data Files';...
@@ -34,12 +42,12 @@ if(period > 0)
     fprintf('Period(s): %.18f\n',period);
 else
     disp("The pulsar info can't be found!");
-    close(fp);
+    fclose(fp);
     return;
 end
 
 % Then, we need to find the first frame header in the file.
-status = LookforHeader(fp);
+status = LookforHeader(fp,2);
 if(status ~= 0)
     disp("The frame header can't be found in the file!!");
     fclose(fp);
@@ -56,16 +64,8 @@ else
     fprintf('Num_acc = %d\n',Num_acc);
 end
 
-%---------------------Init global parameters--------------------------
-Delta_time = Num_acc*2048;
-Lost_frame = 0;
-% frame: frame header(0xffff) + time_info(48bit) + data(2048 * 16 bits)
-Frame_len = 1 + 3 + 2048;
-Header_err = 0;
-L_index = 1;
-Lost_frame_total = 0;
-
 %------------------------- cal parameters ----------------------------
+Delta_time = Num_acc*2048;
 FFT_Points = 4096;
 Fs = 2.4*10^9;
 dt = Num_acc * FFT_Points/Fs;
@@ -105,22 +105,40 @@ xlabel('t(s)');
 title('data');
 
 % Next is folding.
-
-[p_range,dp] = CalDoppler(300,0,period,dt);
+obs_time = max(t);
+fprintf('Obs_time(s): %.2f\n',obs_time);
+[p_range,dp] = CalDoppler(obs_time,0,period,dt);
 
 cycle = floor((p_range(2) - p_range(1)) / dp);
-disp('period range is(s):')
+disp('Period range is(s):')
 fprintf('%.18f\n',p_range(1));
 fprintf('%.18f\n',p_range(2));
-fprintf('delat_p(s): %.18f\n',dp);
-disp(['cycle:',int2str(cycle)]);
+fprintf('Delat_p(s): %.18f\n',dp);
+disp(['Cycle:',int2str(cycle)]);
+
+
+record_filename = [pathstr,'/record/',name,'_record','.txt'];
+
+%creat folders for results
+if exist([pathstr,'/result/'],'dir')==0
+   mkdir([pathstr,'/result/']);
+end
+
+if exist([pathstr,'/record/'],'dir')==0
+   mkdir([pathstr,'/record/']);
+end
+
+if exist([pathstr,'/result/',name,'/'],'dir')==0
+   mkdir([pathstr,'/result/',name,'/']);
+end
 
 i = 0;
-record_filename = [pathstr,'/record/',name,'_record','.txt'];
+fp = fopen(record_filename,'w+');
+fclose(fp);
 for p = p_range(1) : dp : p_range(2)
     fold_d = folding(data,p,dt);
     % write the data into a file for future analysis
-    result_filename = [pathstr,'/result/',name,'_result',int2str(i),'.txt'];
+    result_filename = [pathstr,'/result/',name,'/',name,'_result',int2str(i),'.txt'];
     WritetoFile(result_filename,fold_d,p);
     % check the data
     result = DataAnalysis(fold_d);
@@ -130,9 +148,4 @@ for p = p_range(1) : dp : p_range(2)
     i = i + 1
 end
 
-% figure;
-% t = (1:length(fold_d))*dt*1000;
-% plot(t,fold_d);
-% xlabel('t(ms)');
-% title('Folded result');
     

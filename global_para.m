@@ -1,1 +1,1 @@
-global Num_acc Time_nfo Last_time_info Delta_time Frame_len Lost_frame Header_err Lost_frame_total L_index
+global Num_acc Time_nfo Last_time_info Delta_time Frame_len Lost_frame Header_err Lost_frame_total L_index Threshold
