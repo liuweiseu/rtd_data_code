@@ -1,0 +1,37 @@
+function [d,t] = ReadFrame(fp)
+global_para;
+if(Lost_frame > 0)
+   d = zeros(Frame_len-4,1);
+   t = Last_time_info;
+   Last_time_info = t + Delta_time;
+   Lost_frame = Lost_frame - 1;
+   return;
+end
+
+[data,cnt] = fread(fp,Frame_len + 4,'uint16');
+% if we read to the end of the file.
+if(cnt ~= Frame_len+4)
+    d = zeros(Frame_len-4,1);
+    t = -1;
+    return;
+end
+
+Lost_frame = SearchFrameHeader(fp,data);
+
+if(Lost_frame > 0)
+   % record the 
+   Lost_frame_total(L_index) = Lost_frame;
+   L_index = L_index + 1;
+   d = zeros(Frame_len-4,1);
+   t = Last_time_info;
+   Last_time_info = t + Delta_time;
+   Lost_frame = Lost_frame - 1;
+   return;
+else
+    t = data(2)*2^32 + data(3)*2^16 + data(4);
+    d = data(5:Frame_len,1);
+    return;
+end
+
+end
+
