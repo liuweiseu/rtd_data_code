@@ -47,7 +47,7 @@ else
 end
 
 % Then, we need to find the first frame header in the file.
-status = LookforHeader(fp,2);
+status = LookforHeader(fp,3);
 if(status ~= 0)
     disp("The frame header can't be found in the file!!");
     fclose(fp);
@@ -88,7 +88,7 @@ while(1)
 end
 fclose(fp);
 % plot the time info and data
-time_s = time*512/(2.4*10^9);
+time_s = time*512/(300*10^6);
 figure;
 subplot(3,1,1);
 plot(time_s,'r-*');
@@ -134,6 +134,7 @@ end
 
 i = 0;
 fp = fopen(record_filename,'w+');
+fprintf(fp,'obs_time(s): %.2f\n',obs_time);
 fclose(fp);
 for p = p_range(1) : dp : p_range(2)
     fold_d = folding(data,p,dt);
