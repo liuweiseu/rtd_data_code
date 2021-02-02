@@ -5,13 +5,7 @@ close all;
 global_para;
 
 %---------------------Init global parameters--------------------------
-Lost_frame = 0;
-% frame: frame header(0xffff) + time_info(48bit) + data(2048 * 16 bits)
-Frame_len = 1 + 3 + 2048;
-Header_err = 0;
-L_index = 1;
-Lost_frame_total = 0;
-Threshold = 60000;
+InitGlobal();
 %------------------------- open data file ----------------------------
 [filename0, pathname] = uigetfile( ...
     {'*.dat','data Files';...
@@ -25,15 +19,11 @@ else
    filename= fullfile(pathname, filename0);
 end
 
-fp=fopen(filename,'r');
+Num_acc = RTD_OpenFile(filename);
 [pathstr,name,suffix]=fileparts(filename);
+
 %---------- Search for the necessary patameters from the file---------
-
-% Num_acc = input('Please type in the Num Acc:');
-% period = input('Please type in the period of the signal(s):');
-
-% Let's finish it automatically.
-% First, we need to get the period from Pulsar_info.txt
+% We need to get the period from Pulsar_info.txt
 s = strsplit(name,'_');
 pulsar_name = s{1};
 fprintf('Pulsar : %s\n', pulsar_name);
@@ -44,24 +34,6 @@ else
     disp("The pulsar info can't be found!");
     fclose(fp);
     return;
-end
-
-% Then, we need to find the first frame header in the file.
-status = LookforHeader(fp,3);
-if(status ~= 0)
-    disp("The frame header can't be found in the file!!");
-    fclose(fp);
-    return;
-end
-
-% Last, we need to search for the num_acc
-Num_acc = LookforNumAcc(fp);
-if(Num_acc == 0)
-    disp("Num_acc is incorrect!");
-    fclose(fp);
-    return;
-else
-    fprintf('Num_acc = %d\n',Num_acc);
 end
 
 %------------------------- cal parameters ----------------------------
@@ -75,18 +47,15 @@ dt = Num_acc * FFT_Points/Fs;
 % We will check the time info first, and get zeros, if we find frame loss.
 i = 1;
 while(1)
-    [d,t] = ReadFrame(fp);
+    [d,t] = RTD_ReadFrame();
     if(t<0)
         break;
     end
     time(i) = t;
     data(((i-1)*2048+1):(i*2048),1)=d(:,1);
     i = i + 1;
-%     if(i==6000)
-%         break;
-%     end
 end
-fclose(fp);
+RTD_CloseFile();
 % plot the time info and data
 time_s = time*512/(300*10^6);
 figure;
@@ -132,21 +101,23 @@ if exist([pathstr,'/result/',name,'/'],'dir')==0
    mkdir([pathstr,'/result/',name,'/']);
 end
 
-i = 0;
+i = 1;
 fp = fopen(record_filename,'w+');
 fprintf(fp,'obs_time(s): %.2f\n',obs_time);
 fclose(fp);
+
 for p = p_range(1) : dp : p_range(2)
     fold_d = folding(data,p,dt);
     % write the data into a file for future analysis
     result_filename = [pathstr,'/result/',name,'/',name,'_result',int2str(i),'.txt'];
     WritetoFile(result_filename,fold_d,p);
     % check the data
-    result = DataAnalysis(fold_d);
-%     if(result > 0)
-        Record(record_filename,i,result);
-%     end
+    result(i) = DataAnalysis(fold_d);
+    Record(record_filename,i,result(i));
     i = i + 1
 end
+
+figure;
+plot(result);
 
     
