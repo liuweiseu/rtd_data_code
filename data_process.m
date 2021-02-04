@@ -11,7 +11,7 @@ InitGlobal();
     {'*.dat','data Files';...
     '*.*','All Files' },...
     'Select Data File',...
-    '');
+    '../RTD_data');
 if isequal(filename0,0)
    disp('User selected Cancel')
    return;
@@ -77,6 +77,9 @@ title('data');
 obs_time = max(t);
 fprintf('Obs_time(s): %.2f\n',obs_time);
 [p_range,dp] = CalDoppler(obs_time,0,period,dt);
+
+p_range(1) = p_range(1) - 0.000001;
+p_range(2) = p_range(2) + 0.000001;
 
 cycle = floor((p_range(2) - p_range(1)) / dp);
 disp('Period range is(s):')
