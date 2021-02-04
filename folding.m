@@ -24,7 +24,11 @@ while(index_int < len_d-N_int)
 end
 
 for i=1:N_int
-     fold_d(i) = fold_d(i)/(cnt(i)+1);
+    if(cnt(i)~=0)
+        fold_d(i) = fold_d(i)/(cnt(i)+1);
+    else
+        fold_d(i) = 0; 
+    end
 end
 
 end
