@@ -19,7 +19,7 @@ else
    filename= fullfile(pathname, filename0);
 end
 
-Num_acc = RTD_OpenFile(filename);
+Num_acc = RTD_OpenFile(filename)
 [pathstr,name,suffix]=fileparts(filename);
 
 %---------- Search for the necessary patameters from the file---------
@@ -60,16 +60,16 @@ RTD_CloseFile();
 time_s = time*512/(300*10^6);
 figure;
 subplot(3,1,1);
-plot(time_s,'r-*');
+plot(time_s,'r-*');grid;
 ylabel('t(s)');
 title('Time Info');
 subplot(3,1,2);
-plot(diff(time)*512/(2.4*10^9)*1000,'g-*');
+plot(diff(time)*512/(2.4*10^9)*1000,'g-*');grid;
 ylabel('t(ms)');
 title('Diff of Time Info');
 subplot(3,1,3);
 t = (1:length(data))*dt;
-plot(t,data,'b');
+plot(t,data,'b');grid;
 xlabel('t(s)');
 title('data');
 
@@ -78,18 +78,21 @@ obs_time = max(t);
 fprintf('Obs_time(s): %.2f\n',obs_time);
 [p_range,dp] = CalDoppler(obs_time,0,period,dt);
 
-p_range(1) = p_range(1) - 0.0001;
-p_range(2) = p_range(2) + 0.0001;
+% p_range(1) = p_range(1) - 0.000001;
+% p_range(2) = p_range(2) + 0.000001;
 
 cycle = floor((p_range(2) - p_range(1)) / dp);
-disp('Period range is(s):')
-fprintf('%.18f\n',p_range(1));
-fprintf('%.18f\n',p_range(2));
-fprintf('Delat_p(s): %.18f\n',dp);
-disp(['Cycle:',int2str(cycle)]);
 
+% disp('Period range is(s):')
+% fprintf('%.18f\n',p_range(1));
+% fprintf('%.18f\n',p_range(2));
+% fprintf('Delat_p(s): %.18f\n',dp);
+% disp(['Cycle:',int2str(cycle)]);
 
-record_filename = [pathstr,'/record/',name,'_record','.txt'];
+fprintf('Searching Period from %.12f to %.12f step %.12f; totally %d cycles\n',...
+    p_range(1),p_range(2),dp,cycle);
+
+record_filename = [pathstr,'/record/',name,'_record'];
 
 %creat folders for results
 if exist([pathstr,'/result/'],'dir')==0
@@ -107,22 +110,48 @@ else
 end
 
 i = 1;
-fp = fopen(record_filename,'w+');
-fprintf(fp,'obs_time(s): %.2f\n',obs_time);
-fclose(fp);
+% fp = fopen(record_filename,'w+');
+% fprintf(fp,'obs_time(s): %.2f\n',obs_time);
+% fclose(fp);
+result_max=0;
 
 for p = p_range(1) : dp : p_range(2)
+    fprintf('folding No. %d of  %d--',i,cycle+1);
     fold_d = folding(data,p,dt);
     % write the data into a file for future analysis
-    result_filename = [pathstr,'/result/',name,'/',name,'_result',int2str(i),'.txt'];
-    WritetoFile(result_filename,fold_d,p);
+    result_filename = [pathstr,'/result/',name,'/',name,'_result',int2str(i)];
+    %WritetoFile(result_filename,fold_d,p);
+
+    save(result_filename,'fold_d','p');
+    p_i(i)=p;
+    
     % check the data
     result(i) = DataAnalysis(fold_d);
-    Record(record_filename,i,result(i));
-    i = i + 1
+    
+    if result(i)>result_max
+        result_max=result(i);
+        fold_result=fold_d;
+        period_result=sprintf('Period:%.12f in i=%d',p,i);
+        i_result = i;
+    end
+    
+    
+    fprintf('result: %f\n',result(i));    
+%    Record(record_filename,i,result(i));
+    i=i+1;
 end
 
-figure;
-plot(result);
+save(record_filename,'result','i_result',...
+'fold_result','period_result','obs_time','Num_acc');
 
+figure;
+plot(result);grid;title('Result');
+
+[N,I]=max(result);
+
+fprintf('Estimated period is %.15f where i = %d\n',p_i(I),I);
+
+figure;
+plot(fold_result);grid;
+title(period_result)
     

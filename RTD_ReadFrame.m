@@ -5,7 +5,7 @@ function [d,t] = RTD_ReadFrame()
 %           if t<0, it means we read to the end of the file.
 global_para;
 if(Lost_frame > 0)
-   d = zeros(Frame_len-4,1);
+   d = (-1)*ones(Frame_len-4,1);
    t = Last_time_info;
    Last_time_info = t + Delta_time;
    Lost_frame = Lost_frame - 1;
@@ -15,7 +15,7 @@ end
 [data,cnt] = fread(RTD_fp,Frame_len + 4,'uint16');
 % if we read to the end of the file.
 if(cnt ~= Frame_len+4)
-    d = zeros(Frame_len-4,1);
+    d = (-1)*ones(Frame_len-4,1);
     t = -1;
     return;
 end
@@ -27,7 +27,7 @@ if(Lost_frame > 0)
    Lost_frame_total(L_index) = Lost_frame;
    L_index = L_index + 1;
    % return zeros back
-   d = zeros(Frame_len-4,1);
+   d = (-1)*ones(Frame_len-4,1);
    % return a corrct time info
    t = Last_time_info;
    Last_time_info = t + Delta_time;

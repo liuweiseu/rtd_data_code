@@ -28,15 +28,21 @@ k=str2num(filename(i+1:i1));
 k=k-1;
 
 cho=1;
-%figure;
+figure;
 
 while cho~=0
     k=k+cho;
     filename = [filename_base,int2str(k)];
     load(filename);fprintf('No. %d--Period:%.18f\n',k,p);
-    s = sprintf('No. %d--Period:%.18f',k,p);plot(fold_d);grid;title(s)
-    cho=input('Pls input choice: 1 for next;2 for previous;0 for exit:');
-    if cho == 2
-        cho = -1;
-    end
-end
+    s = sprintf('Period:%.18f',p);plot(fold_d);grid;title(s)
+    cho=input('Pls input choice: 0 for previous;1 for next:
+
+
+
+
+
+
+
+
+
+%d=load(filename);

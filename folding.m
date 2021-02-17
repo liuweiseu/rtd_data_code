@@ -13,7 +13,7 @@ while(index_int < len_d-N_int)
     fold_d = fold_d + data(index_int-N_int+1:index_int,1);
     tmp = data(index_int-N_int+1:index_int,1);
     for i=1:N_int
-       if(tmp(i)~=0)
+       if(tmp(i)>-1)
            cnt(i) = cnt(i) + 1;
        end
     end
@@ -25,11 +25,14 @@ end
 
 for i=1:N_int
     if(cnt(i)~=0)
-        fold_d(i) = fold_d(i)/(cnt(i)+1);
+        fold_d(i) = fold_d(i)/(cnt(i));
     else
         fold_d(i) = 0; 
     end
 end
+
+fprintf('Averange from %d to %d times. get cnt=0 for %d times out of %d!---',...
+    max(cnt),min(cnt),sum(cnt==0),N_int);
 
 end
 
