@@ -151,6 +151,8 @@ plot(result);grid;title('Result');
 fprintf('Estimated period is %.15f where i = %d\n',p_i(I),I);
 
 figure;
-plot(fold_result);grid;
+fold_t = (1:length(fold_result))*dt*1000;
+plot(fold_t,fold_result);grid;
 title(period_result)
+xlabel('Time/ms')
     
