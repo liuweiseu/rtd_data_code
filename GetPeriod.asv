@@ -8,10 +8,10 @@ catch
 end
 
 try
-    % this is for matlab2020a
+    % t
     name = d.rowheaders;
 catch
-    % this is for matlab2021a
+    % this is for m
     name = d.textdata;
 end
 len = length(name);
