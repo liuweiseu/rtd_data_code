@@ -32,7 +32,6 @@ if(period > 0)
     fprintf('Period(s): %.18f\n',period);
 else
     disp("The pulsar info can't be found!");
-    fclose(fp);
     return;
 end
 
@@ -78,8 +77,8 @@ obs_time = max(t);
 fprintf('Obs_time(s): %.2f\n',obs_time);
 [p_range,dp] = CalDoppler(obs_time,0,period,dt);
 
-% p_range(1) = p_range(1) - 0.000001;
-% p_range(2) = p_range(2) + 0.000001;
+ p_range(1) = p_range(1) - 0.00001;
+ p_range(2) = p_range(2) + 0.00001;
 
 cycle = floor((p_range(2) - p_range(1)) / dp);
 
