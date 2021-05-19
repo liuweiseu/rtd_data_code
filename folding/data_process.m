@@ -2,6 +2,9 @@ clear;
 clc;
 close all;
 
+% add the path of psf_rw
+addpath(genpath('../rtd_rw'));
+
 global_para;
 
 %---------------------Init global parameters--------------------------
@@ -11,7 +14,7 @@ InitGlobal();
     {'*.dat','data Files';...
     '*.*','All Files' },...
     'Select Data File',...
-    '../RTD_data');
+    '../../RTD_data');
 if isequal(filename0,0)
    disp('User selected Cancel')
    return;
@@ -64,7 +67,7 @@ ylabel('t(s)');
 title('Time Info');
 subplot(3,1,2);
 plot(diff(time)*512/(2.4*10^9)*1000,'g-*');grid;
-ylabel('t(ms)');
+% ylabel('t(ms)');
 title('Diff of Time Info');
 subplot(3,1,3);
 t = (1:length(data))*dt;
@@ -82,11 +85,6 @@ fprintf('Obs_time(s): %.2f\n',obs_time);
 
 cycle = floor((p_range(2) - p_range(1)) / dp);
 
-% disp('Period range is(s):')
-% fprintf('%.18f\n',p_range(1));
-% fprintf('%.18f\n',p_range(2));
-% fprintf('Delat_p(s): %.18f\n',dp);
-% disp(['Cycle:',int2str(cycle)]);
 
 fprintf('Searching Period from %.12f to %.12f step %.12f; totally %d cycles\n',...
     p_range(1),p_range(2),dp,cycle);
