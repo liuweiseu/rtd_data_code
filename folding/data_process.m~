@@ -77,12 +77,13 @@ if(skip_data == 1)
     for i = 1:floor(skip_samples/(Frame_len-4))
         [d,t] =  RTD_ReadFrame();
         if(t<0)
-            disp('There is not enough data for the skipping operation!')
-            return;
-        end
-    end
+        disp('There is not enough data for the skipping operation!')
+       return;
+   end
+end
 remaining = rem(skip_samples,Frame_len-4);
-data_seg0 = d(remaining:(Frame_len-4),1);
+
+data_seg0 = d(remaining:(Frame_len-1),1);
 end
 i = 1;
 while(1)
@@ -94,7 +95,7 @@ while(1)
     data_seg1(((i-1)*2048+1):(i*2048),1)=d(:,1);
     i = i + 1;
 end
-data = [data_seg0; data_seg1];
+data = [data_seg0, data_seg1];
 RTD_CloseFile();
 % plot the time info and data
 time_s = time*512/(300*10^6);
