@@ -82,7 +82,7 @@ if(skip_data == 1)
         end
     end
 remaining = rem(skip_samples,Frame_len-4);
-data_seg0 = d(remaining:(Frame_len-4),1);
+data_seg0 = d(remaining+1:(Frame_len-4),1);
 end
 i = 1;
 while(1)
