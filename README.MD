@@ -19,5 +19,6 @@ Two files are most important for the data processing:
 * ./folding/Pulsar_info.txt:<br>
   The periods of pulsars are recorded in this file.
  
- Therefore, you need to add the period of the pulsar first, and then run RTDDataProcess.m.<br>
- (Note: The estimated period of J0835-4510 on June 17th has already been recorded in the Pulsar_info.txt by default)
+ To process the rtd data, you need to:<br>
+ (1) add the period of the pulsar to Pulsar_info.txt.<br>
+ (2) run RTDDataProcess.m.<br>
