@@ -14,7 +14,7 @@ InitGlobal();
     {'*.dat','data Files';...
     '*.*','All Files' },...
     'Select Data File',...
-    '../../RTD_data');
+    '../../Yunnan_Data/J0835-4510_0');
 if isequal(filename0,0)
    disp('User selected Cancel')
    return;
@@ -35,6 +35,7 @@ if(period > 0)
     fprintf('Period(s): %.18f\n',period);
 else
     disp("The pulsar info can't be found!");
+    RTD_CloseFile();
     return;
 end
 folding_start_time = input('Folding start at(raw time info, default means no data is skipped):');
@@ -71,6 +72,12 @@ if(skip_data == 1)
     end
 end
 
+bin = input('Pls type in the bin number(default-512; -1-Original number):');
+
+if(length(bin) == 0)
+   bin = 512;
+end
+
 % get data from the data file, and skip the data get before the folding start time
 data_seg0 = [];
 if(skip_data == 1)
@@ -84,6 +91,7 @@ if(skip_data == 1)
 remaining = rem(skip_samples,Frame_len-4);
 data_seg0 = d(remaining+1:(Frame_len-4),1);
 end
+t_start=datetime;
 i = 1;
 while(1)
     [d,t] = RTD_ReadFrame();
@@ -96,6 +104,13 @@ while(1)
 end
 data = [data_seg0; data_seg1];
 RTD_CloseFile();
+
+obs_time = input('How long you want to observe?(s,default:-1):')
+if(obs_time~=-1)
+    obs_len = floor(obs_time/dt);
+    data = data(1:obs_len);
+end
+
 % plot the time info and data
 time_s = time*512/(300*10^6);
 figure;
@@ -120,7 +135,8 @@ fprintf('Obs_time(s): %.2f\n',obs_time);
 
  p_range(1) = p_range(1) - 0.00001;
  p_range(2) = p_range(2) + 0.00001;
-
+  p_range(1)=period;
+  p_range(2)=period;
 cycle = floor((p_range(2) - p_range(1)) / dp);
 
 
@@ -149,7 +165,6 @@ i = 1;
 % fprintf(fp,'obs_time(s): %.2f\n',obs_time);
 % fclose(fp);
 result_max=0;
-
 for p = p_range(1) : dp : p_range(2)
     fprintf('folding No. %d of  %d--',i,cycle+1);
     fold_d = folding(data,p,dt);
@@ -175,6 +190,10 @@ for p = p_range(1) : dp : p_range(2)
 %    Record(record_filename,i,result(i));
     i=i+1;
 end
+t_stop=datetime;
+
+fprintf('Processing time:\r\n');
+between(t_start,t_stop)
 
 save(record_filename,'result','i_result',...
 'fold_result','period_result','obs_time','Num_acc');
@@ -186,9 +205,26 @@ plot(result);grid;title('Result');
 
 fprintf('Estimated period is %.15f where i = %d\n',p_i(I),I);
 
+if(bin > 0)
+    len = length(fold_result);
+    delta_bin = floor(len/bin);
+    for i=1:bin-1
+       tmp(i) = sum(fold_result((i-1)*delta_bin+1:i*delta_bin))/delta_bin; 
+    end
+    tmp(bin)=sum(fold_result((bin-1)*delta_bin+1:len))/(len-(bin-1)*delta_bin); 
+end
+fold_result = tmp;
+tmp = sort(fold_result);
+m = mean(tmp(1:length(tmp/2)));
+fold_result = fold_result - m;
+snr = Cal_SNR(fold_result);
+name = [period_result,'  ','SNR: ',num2str(snr)];
 figure;
 fold_t = (1:length(fold_result))*dt*1000;
+fold_t = fold_t/max(fold_t);
 plot(fold_t,fold_result);grid;
-title(period_result)
-xlabel('Time/ms')
+set(gca,'FontSize',14);
+title(name,'FontSize',16);
+xlabel('Phase','FontSize',16);
+ylabel('Power','FontSize',16);
     
