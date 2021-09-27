@@ -14,7 +14,7 @@ InitGlobal();
     {'*.dat','data Files';...
     '*.*','All Files' },...
     'Select Data File',...
-    '../../Yunnan_Data/J0835-4510_0');
+    '../rtd_data');
 if isequal(filename0,0)
    disp('User selected Cancel')
    return;
@@ -38,27 +38,24 @@ else
     RTD_CloseFile();
     return;
 end
-folding_start_time = input('Folding start at(raw time info, default means no data is skipped):');
-folding_start_time = folding_start_time + 8;
+
+folding_start_time = [];
 %------------------------- cal parameters ----------------------------
 Delta_time = Num_acc*2048;
 FFT_Points = 4096;
 Fs = 2.4*10^9;
 dt = Num_acc * FFT_Points/Fs;
-
 %---------------------------- Let's go -------------------------------
 % We start to read data frame from the file.
 % We will check the time info first, and get zeros, if we find frame loss.
 
-% let's check the start time first
-[d,fisrt_time_info] = RTD_ReadFrame();
-fisrt_time_info
 % check if we have specified a folding_start_time
 if(length(folding_start_time)>0)
     skip_data = 1;
 else
     skip_data = 0;
 end
+
 % if so, we need to check the folding_start_time
 if(skip_data == 1)
     if( fisrt_time_info>folding_start_time)
@@ -72,8 +69,7 @@ if(skip_data == 1)
     end
 end
 
-bin = input('Pls type in the bin number(default-512; -1-Original number):');
-
+bin=512;
 if(length(bin) == 0)
    bin = 512;
 end
@@ -91,6 +87,7 @@ if(skip_data == 1)
 remaining = rem(skip_samples,Frame_len-4);
 data_seg0 = d(remaining+1:(Frame_len-4),1);
 end
+[d,first_time_info] = RTD_ReadFrame();
 t_start=datetime;
 i = 1;
 while(1)
@@ -105,7 +102,7 @@ end
 data = [data_seg0; data_seg1];
 RTD_CloseFile();
 
-obs_time = input('How long you want to observe?(s,default:-1):')
+obs_time = [];
 if(obs_time~=-1)
     obs_len = floor(obs_time/dt);
     data = data(1:obs_len);
@@ -131,79 +128,13 @@ title('data');
 % Next is folding.
 obs_time = max(t);
 fprintf('Obs_time(s): %.2f\n',obs_time);
-[p_range,dp] = CalDoppler(obs_time,0,period,dt);
 
- p_range(1) = p_range(1) - 0.00001;
- p_range(2) = p_range(2) + 0.00001;
-  p_range(1)=period;
-  p_range(2)=period;
-cycle = floor((p_range(2) - p_range(1)) / dp);
-
-
-fprintf('Searching Period from %.12f to %.12f step %.12f; totally %d cycles\n',...
-    p_range(1),p_range(2),dp,cycle);
-
-record_filename = [pathstr,'/record/',name,'_record'];
-
-%creat folders for results
-if exist([pathstr,'/result/'],'dir')==0
-   mkdir([pathstr,'/result/']);
-end
-
-if exist([pathstr,'/record/'],'dir')==0
-   mkdir([pathstr,'/record/']);
-end
-
-if exist([pathstr,'/result/',name,'/'],'dir')==0
-   mkdir([pathstr,'/result/',name,'/']);
-else
-   delete([pathstr,'/result/',name,'/','*.txt']);
-end
-
-i = 1;
-% fp = fopen(record_filename,'w+');
-% fprintf(fp,'obs_time(s): %.2f\n',obs_time);
-% fclose(fp);
-result_max=0;
-for p = p_range(1) : dp : p_range(2)
-    fprintf('folding No. %d of  %d--',i,cycle+1);
-    fold_d = folding(data,p,dt);
-    % write the data into a file for future analysis
-    result_filename = [pathstr,'/result/',name,'/',name,'_result',int2str(i)];
-    %WritetoFile(result_filename,fold_d,p);
-
-    save(result_filename,'fold_d','p');
-    p_i(i)=p;
-    
-    % check the data
-    result(i) = DataAnalysis(fold_d);
-    
-    if result(i)>result_max
-        result_max=result(i);
-        fold_result=fold_d;
-        period_result=sprintf('Period:%.12f in i=%d',p,i);
-        i_result = i;
-    end
-    
-    
-    fprintf('result: %f\n',result(i));    
-%    Record(record_filename,i,result(i));
-    i=i+1;
-end
+fold_result = folding(data,period,dt);
+period_result=sprintf('Period:%.12f in i=%d',period,1);
 t_stop=datetime;
 
-fprintf('Processing time:\r\n');
-between(t_start,t_stop)
-
-save(record_filename,'result','i_result',...
-'fold_result','period_result','obs_time','Num_acc');
-
-figure;
-plot(result);grid;title('Result');
-
-[N,I]=max(result);
-
-fprintf('Estimated period is %.15f where i = %d\n',p_i(I),I);
+t_processing = datevec(between(t_start,t_stop));
+fprintf('Processing time:%.4fs\r\n',t_processing(6));
 
 if(bin > 0)
     len = length(fold_result);
@@ -227,4 +158,3 @@ set(gca,'FontSize',14);
 title(name,'FontSize',16);
 xlabel('Phase','FontSize',16);
 ylabel('Power','FontSize',16);
-    

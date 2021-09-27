@@ -31,8 +31,8 @@ for i=1:N_int
     end
 end
 
-fprintf('Averange from %d to %d times. get cnt=0 for %d times out of %d!---',...
-    max(cnt),min(cnt),sum(cnt==0),N_int);
+% fprintf('Averange from %d to %d times. get cnt=0 for %d times out of %d!---',...
+%     max(cnt),min(cnt),sum(cnt==0),N_int);
 
 end
 
